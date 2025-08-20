@@ -4,6 +4,9 @@ import ChessCanvas from "./canvas";
 type highlightedSquares = GridCoords & { colour: string }
 export default class ChessEffect extends ChessCanvas {
     highlightedSquares: highlightedSquares[] = [];
+    private flashingTimeoutID: number | null = null;
+    private flashingIntervalID: number | null = null;
+
     constructor(w: number, h: number) {
         super(w, h);
         this.id = 'chess-effects'
@@ -25,6 +28,17 @@ export default class ChessEffect extends ChessCanvas {
 
     flashSquare(options: { row: number, col: number, colour: string }) {
         let { row, col, colour } = options
+
+        // Clear any existing flash animations
+        if (this.flashingTimeoutID) {
+            clearTimeout(this.flashingTimeoutID);
+            this.flashingTimeoutID = null;
+        }
+        if (this.flashingIntervalID) {
+            clearInterval(this.flashingIntervalID);
+            this.flashingIntervalID = null;
+        }
+
         this.ctx.fillStyle = colour
 
         let visible = true;
@@ -38,7 +52,7 @@ export default class ChessEffect extends ChessCanvas {
         this.ctx.fillStyle = colour
         this.ctx.fillRect(x, y, size, size);
 
-        const flashingID = setInterval(() => {
+        this.flashingIntervalID = setInterval(() => {
             if (visible) {
                 this.ctx.clearRect(x, y, size, size);
             } else {
@@ -47,11 +61,15 @@ export default class ChessEffect extends ChessCanvas {
             visible = !visible;
         }, interval);
 
-        setTimeout(() => {
-            clearInterval(flashingID);
-            this.clear()
-            this.render()
-        }, duration)
+        this.flashingTimeoutID = setTimeout(() => {
+            if (this.flashingIntervalID) {
+                clearInterval(this.flashingIntervalID);
+                this.flashingIntervalID = null;
+            }
+            this.flashingTimeoutID = null;
+            this.clear();
+            this.render();
+        }, duration);
     }
 
     render() {

@@ -2,7 +2,7 @@ import ChessBoard from "../ui/board";
 import ChessEffect from "../ui/effects";
 import ChessModal from "../ui/modal";
 import PieceLayer from "../ui/pieces";
-import { ChessPiece } from "../types/chess.types";
+import { ChessPiece, type Theme } from "../types/chess.types";
 import { abs, floor, max, sign } from "../utils/math";
 import Piece from "../ui/piece";
 
@@ -28,31 +28,37 @@ export default class ChessGame extends HTMLDivElement {
     private chessEffect: ChessEffect;
     private moveCount: number;
     private isChecked: boolean = false
-    private checkedKing?: PieceData;
+    private checkedKing: PieceData | null = null;
     private isMate: boolean = false
     private turn: turn;
-    theme: {
-        w: string;
-        b: string;
+    theme: Theme = {
+        w: "#EBECD0",
+        b: "#779556"
+    }
+    options = {
+        label: false,
+        theme: this.theme,
+        highlightColor: {
+            selected: this.highlightColor,
+            check: this.highlightColor,
+            move: this.highlightColor
+        }
     };
     private boardState: Board = [];
-    constructor(w: number, h: number) {
+    constructor(w: number, h: number, options?: GameOptions) {
         super()
         this.style.width = w + "px";
         this.style.height = h + "px";
         this.style.position = 'relative';
         this.style.borderRadius = '6px'
         this.style.overflow = 'hidden'
-        this.chessBoard = new ChessBoard(w, h);
+        this.chessBoard = new ChessBoard(w, h, options?.label);
         this.chessEffect = new ChessEffect(w, h);
         this.chessPieces = new PieceLayer(w, h);
         this.fenToBoard(ChessGame.StartingFEN);
         this.turn = "w";
         this.moveCount = 0;
-        this.theme = {
-            w: "#EBECD0",
-            b: "#779556"
-        };
+        this.theme = this.theme
     }
 
     connectedCallback() {
@@ -354,8 +360,6 @@ export default class ChessGame extends HTMLDivElement {
                 col: defendingKing.col
             }
             if (this.isValidMove(from, to, attacker.type, board)) {
-                this.checkedKing = defendingKing
-
                 return true
             }
         }
@@ -363,6 +367,7 @@ export default class ChessGame extends HTMLDivElement {
     }
 
     isCheckmate(board: Board, turn: turn) {
+        board = structuredClone(board)
         if (this.isChecked) {
             let movesAvaiable = this.getLegalMoves(board, turn).size
             if (movesAvaiable == 0) {
@@ -669,7 +674,6 @@ export default class ChessGame extends HTMLDivElement {
                 return verifySlidingMove()
 
             case 'p':
-                this.canPromote
                 return verifyPawnMove()
 
             case 'n':
@@ -807,12 +811,17 @@ export default class ChessGame extends HTMLDivElement {
             this.isMate = this.isCheckmate(this.boardState, this.turn)
             return true
         }
-        if (this.isChecked && this.checkedKing && this.checkedKing.type[0] == color) {
-            this.chessEffect.flashSquare({
-                row: this.checkedKing.row,
-                col: this.checkedKing.col,
-                colour: 'rgba(220, 20, 60, 0.6)'
-            })
+
+
+        if (this.isChecked) {
+            this.checkedKing = this.getAttackers(this.boardState, this.turn).defendingKing
+            if (this.checkedKing && color == this.turn) {
+                this.chessEffect.flashSquare({
+                    row: this.checkedKing.row,
+                    col: this.checkedKing.col,
+                    colour: 'rgba(220, 20, 60, 0.6)'
+                })
+            }
         }
         return false
     }

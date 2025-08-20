@@ -8,10 +8,11 @@ export default class ChessBoard extends ChessCanvas {
   };
   font: string = 'Poppins'
   files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-
-  constructor(w: number, h: number) {
+  label: boolean;
+  constructor(w: number, h: number, label: boolean = false) {
     super(w, h);
     this.id = 'chess-board'
+    this.label = label
   }
 
   set theme(theme: { w: string; b: string }) {
@@ -51,6 +52,12 @@ export default class ChessBoard extends ChessCanvas {
     }
   }
 
+  drawLabels() {
+    if (!this.label) return
+    this.drawRanks()
+    this.drawFiles()
+  }
+
   drawSqaures() {
     let { w, b } = this.colorScheme
     for (let row = 0; row < 8; row++) {
@@ -63,7 +70,6 @@ export default class ChessBoard extends ChessCanvas {
         x += this.boxSize;
       }
     }
-
   }
 
   async render() {
@@ -71,10 +77,7 @@ export default class ChessBoard extends ChessCanvas {
     await Poppins.load()
     document.fonts.add(Poppins)
     this.drawSqaures()
-    this.drawFiles()
-    this.drawRanks()
-
-
+    this.drawLabels()
   }
 }
 

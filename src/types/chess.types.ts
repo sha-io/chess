@@ -14,3 +14,8 @@ export enum ChessPiece {
 }
 
 export type BoardPiece = ChessPiece
+
+export type Theme = {
+    w: string;
+    b: string;
+}

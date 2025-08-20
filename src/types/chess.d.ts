@@ -10,6 +10,11 @@ interface IChessCanvas {
 
 interface PieceData { row: number; col: number; type: ChessPiece }
 
+type Theme = {
+    w: string;
+    b: string;
+}
+
 type Coords = {
     x: number,
     y: number
@@ -39,3 +44,5 @@ type CastleRights = {
         k: boolean, q: boolean
     }
 }
+
+type GameOptions = { label?: boolean, theme?: Theme, highlightColor?: { selected?: string, check?: string, move?: string } }
